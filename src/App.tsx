@@ -1,12 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Search, 
-  Sparkles, 
-  GraduationCap, 
-  ArrowRight, 
-  Loader2, 
-  BookOpen, 
+import {
+  Search,
+  Sparkles,
+  GraduationCap,
+  ArrowRight,
+  Loader2,
+  BookOpen,
   Target,
   BrainCircuit,
   RefreshCw,
@@ -32,7 +32,7 @@ export default function App() {
   const { user, isLoaded } = useUser();
   const { signOut: clerkSignOut, openSignIn } = useClerk();
   const [activeTab, setActiveTab] = useState<'roadmap' | 'lab'>('roadmap');
-  
+
   // Roadmap state
   const [goal, setGoal] = useState('');
   const [level, setLevel] = useState('Beginner');
@@ -43,7 +43,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  
+
   // Veo state
   const [veoLoading, setVeoLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -99,7 +99,7 @@ export default function App() {
     setError(null);
     try {
       const result = await generateLearningRoadmap(goal, level, skills, mode);
-      
+
       let videoUrl = '';
       if (selectedImage) {
         setVeoLoading(true);
@@ -127,9 +127,15 @@ export default function App() {
       };
 
       if (user) {
-        const docRef = await addDoc(collection(db, 'roadmaps'), roadmapData);
-        setRoadmap({ ...roadmapData, id: docRef.id });
-        fetchHistory(user.id);
+        try {
+          const docRef = await addDoc(collection(db, 'roadmaps'), roadmapData);
+          setRoadmap({ ...roadmapData, id: docRef.id });
+          fetchHistory(user.id);
+        } catch (fbErr) {
+          // Firestore save failed (e.g. rules not yet deployed) — still show the roadmap
+          console.warn('Firestore save skipped:', fbErr);
+          setRoadmap(roadmapData);
+        }
       } else {
         setRoadmap(roadmapData);
       }
@@ -233,11 +239,11 @@ export default function App() {
             </div>
             <span>PathwayAI</span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={() => setShowHistory(!showHistory)}
                   className="p-2 rounded-full hover:bg-zinc-100 transition-colors text-zinc-600"
                   title="History"
@@ -245,14 +251,14 @@ export default function App() {
                   <History className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-2">
-                  <img src={user.photoURL || ''} alt="" className="w-8 h-8 rounded-full border border-zinc-200" />
+                  <img src={user.imageUrl || ''} alt="" className="w-8 h-8 rounded-full border border-zinc-200" />
                   <button onClick={logout} className="text-sm font-medium text-zinc-500 hover:text-zinc-900">
                     <LogOut className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={login}
                 className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-xl text-sm font-bold hover:bg-zinc-800 transition-colors"
               >
@@ -261,7 +267,7 @@ export default function App() {
               </button>
             )}
             {roadmap && (
-              <button 
+              <button
                 onClick={reset}
                 className="text-sm font-medium text-zinc-500 hover:text-zinc-900 flex items-center gap-2 transition-colors"
               >
@@ -279,22 +285,20 @@ export default function App() {
             <div className="flex p-1 bg-zinc-100 rounded-2xl border border-zinc-200">
               <button
                 onClick={() => setActiveTab('roadmap')}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                  activeTab === 'roadmap' 
-                    ? 'bg-white text-zinc-900 shadow-sm' 
+                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'roadmap'
+                    ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-700'
-                }`}
+                  }`}
               >
                 <Target className="w-4 h-4" />
                 Roadmap
               </button>
               <button
                 onClick={() => setActiveTab('lab')}
-                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-                  activeTab === 'lab' 
-                    ? 'bg-white text-zinc-900 shadow-sm' 
+                className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'lab'
+                    ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-700'
-                }`}
+                  }`}
               >
                 <Wand2 className="w-4 h-4" />
                 AI Lab
@@ -320,8 +324,8 @@ export default function App() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {history.map((item) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     onClick={() => { setRoadmap(item); setShowHistory(false); }}
                     className="p-6 bg-white border border-zinc-200 rounded-2xl hover:shadow-lg transition-all cursor-pointer group"
                   >
@@ -357,22 +361,20 @@ export default function App() {
               <div className="flex p-1 bg-zinc-100 rounded-2xl border border-zinc-200 mb-8">
                 <button
                   onClick={() => { setLabMode('analyze'); setLabResult(null); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
-                    labMode === 'analyze' 
-                      ? 'bg-white text-zinc-900 shadow-sm' 
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${labMode === 'analyze'
+                      ? 'bg-white text-zinc-900 shadow-sm'
                       : 'text-zinc-500 hover:text-zinc-700'
-                  }`}
+                    }`}
                 >
                   <Scan className="w-4 h-4" />
                   Analyze Image
                 </button>
                 <button
                   onClick={() => { setLabMode('generate'); setLabResult(null); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
-                    labMode === 'generate' 
-                      ? 'bg-white text-zinc-900 shadow-sm' 
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${labMode === 'generate'
+                      ? 'bg-white text-zinc-900 shadow-sm'
                       : 'text-zinc-500 hover:text-zinc-700'
-                  }`}
+                    }`}
                 >
                   <ImageIcon className="w-4 h-4" />
                   Generate/Edit Image
@@ -393,7 +395,7 @@ export default function App() {
                       className="hidden"
                       id="lab-image-upload"
                     />
-                    <label 
+                    <label
                       htmlFor="lab-image-upload"
                       className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-zinc-200 rounded-xl cursor-pointer hover:border-zinc-900 transition-all bg-zinc-50"
                     >
@@ -407,7 +409,7 @@ export default function App() {
                       )}
                     </label>
                     {labImagePreview && (
-                      <button 
+                      <button
                         type="button"
                         onClick={() => { setLabImage(null); setLabImagePreview(null); }}
                         className="absolute top-2 right-2 p-1 bg-zinc-900 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -541,11 +543,10 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setMode('fast')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
-                          mode === 'fast' 
-                            ? 'bg-white text-zinc-900 shadow-sm' 
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${mode === 'fast'
+                            ? 'bg-white text-zinc-900 shadow-sm'
                             : 'text-zinc-500 hover:text-zinc-700'
-                        }`}
+                          }`}
                       >
                         <RefreshCw className={`w-3 h-3 ${mode === 'fast' ? 'animate-spin-slow' : ''}`} />
                         Fast
@@ -553,11 +554,10 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setMode('deep')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${
-                          mode === 'deep' 
-                            ? 'bg-white text-zinc-900 shadow-sm' 
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${mode === 'deep'
+                            ? 'bg-white text-zinc-900 shadow-sm'
                             : 'text-zinc-500 hover:text-zinc-700'
-                        }`}
+                          }`}
                       >
                         <BrainCircuit className="w-3 h-3" />
                         Deep
@@ -594,7 +594,7 @@ export default function App() {
                       className="hidden"
                       id="image-upload"
                     />
-                    <label 
+                    <label
                       htmlFor="image-upload"
                       className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-zinc-200 rounded-xl cursor-pointer hover:border-zinc-900 transition-all bg-zinc-50"
                     >
@@ -608,7 +608,7 @@ export default function App() {
                       )}
                     </label>
                     {imagePreview && (
-                      <button 
+                      <button
                         type="button"
                         onClick={() => { setSelectedImage(null); setImagePreview(null); }}
                         className="absolute top-2 right-2 p-1 bg-zinc-900 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -653,7 +653,7 @@ export default function App() {
             >
               <div className="mb-12">
                 <div className="flex items-center gap-3 mb-4">
-                  <button 
+                  <button
                     onClick={reset}
                     className="p-2 rounded-full hover:bg-zinc-100 transition-colors no-print"
                   >
@@ -662,7 +662,7 @@ export default function App() {
                   <h2 className="text-3xl font-bold tracking-tight">
                     Roadmap: {roadmap.learningGoal}
                   </h2>
-                  <button 
+                  <button
                     onClick={() => window.print()}
                     className="ml-auto p-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 transition-colors flex items-center gap-2 text-sm font-medium no-print"
                   >
@@ -682,11 +682,11 @@ export default function App() {
 
               {roadmap.videoUrl && (
                 <div className="mb-12 rounded-3xl overflow-hidden border border-zinc-200 shadow-lg aspect-video bg-black">
-                  <video 
-                    src={roadmap.videoUrl} 
-                    controls 
-                    autoPlay 
-                    loop 
+                  <video
+                    src={roadmap.videoUrl}
+                    controls
+                    autoPlay
+                    loop
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -703,7 +703,7 @@ export default function App() {
                 <p className="text-zinc-400 mb-8 max-w-lg mx-auto">
                   This roadmap is just the beginning. The most important step is the first one. Pick a resource and dive in!
                 </p>
-                <button 
+                <button
                   onClick={() => window.print()}
                   className="px-8 py-3 bg-white text-zinc-900 rounded-xl font-bold hover:bg-zinc-100 transition-colors"
                 >
@@ -718,7 +718,7 @@ export default function App() {
       <footer className="py-12 border-t border-zinc-200 mt-24">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <p className="text-zinc-400 text-sm">
-            Powered by Featherless AI & Open Educational Resources. 
+            Powered by Featherless AI & Open Educational Resources.
             <br />
             Built for lifelong learners.
           </p>
